@@ -1,0 +1,16 @@
+from django.db import models
+from django.contrib.auth.models import User
+from news.models import Author, Post, Category, PostCategory, Comment
+
+userMary = User.objects.create_user(username = 'Mary')
+userBob = User.objects.create_user(username = 'Bob')
+
+author1 = Author.objects.create(user=userMary)
+author2 = Author.objects.create(user=userBob)
+
+category1 = Category.objects.create(name='Sport')
+category2 = Category.objects.create(name='Music')
+category3 = Category.objects.create(name='Politics')
+category4 = Category.objects.create(name='Games')
+
+post_news = Post.objects.create(author = userMary, heading = 'Супер-новость', text = 'Нерабочая неделя на которой все работают продлится месяц!')
