@@ -1,0 +1,15 @@
+{% extends 'flatpages/default.html' %}
+{% load censor %}  <!-- Подгружаем фильтры -->
+
+{% block title %}
+Новость
+{% endblock title %}
+
+<!-- В контенте на странице мы выводим все товары -->
+{% block content %}
+<h1>Интересующий Вас контент:</h1>
+<h5>
+<strong> {{ post.title }} </strong>
+</h5>
+{{ post.text|censor }}
+{% endblock content %}
