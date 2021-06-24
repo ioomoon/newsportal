@@ -2,12 +2,20 @@ from django.shortcuts import render
 from django.views import View  # класс простого представления
 from django.views.generic import ListView  # класс, который позволяет в представлении выводить список объектов из БД
 from django.views.generic import DetailView  # класс, который позволяет вывести детали объекта на отдельной странице
-from django.views.generic import UpdateView, CreateView, DeleteView  # классы, повзволяющие добавлять,
-                                                                     # удалять и обновлять объекты
+'''Импортируем классы, повзволяющие добавлять, удалять и обновлять объекты'''
+from django.views.generic import UpdateView, CreateView, DeleteView, TemplateView
 from .models import Post
 from .filters import PostFilter  # импортируем фильтр
 from .forms import PostForm
-
+'''Импортируем миксин, который проверяет аутентификацию и допускает на страницу только зарегистрированных пользователей.
+ Его добавляем в наследуемые классы. Кроме миксина можно использовать декоратор login_required'''
+from django.contrib.auth.mixins import LoginRequiredMixin
+'''Импортируем миксин, который проверяет, есть ли у пользователя, обращающегося к представлению, все заданные 
+разрешения. Нужно указать разрешение (или итерацию разрешений) с помощью параметра permission_required
+<app>.<action>_<model>.'''
+from django.contrib.auth.mixins import PermissionRequiredMixin
+'''Импортируем встроенный модуль, позволяющий отправлять электронные письма'''
+from django.core.mail import send_mail
 
 class PostList(ListView):
     model = Post  # указываем модель, объекты которой мы будем выводить
@@ -40,14 +48,17 @@ class PostSearch(ListView):
         return context
 
 
-class PostAdd(CreateView):  # Джейнерик для создания объекта
+class PostAdd(CreateView, LoginRequiredMixin, PermissionRequiredMixin):  # Джейнерик для создания объекта
     template_name = 'add.html'
     form_class = PostForm
+    # Форма разрешений: <app>.<action>_<model>.
+    permission_required = ('news.add_post', 'news.delete_post', 'news.change_post')
 
 
-class PostUpdate(UpdateView):  # Джейнерик для редактирования объекта, используем тот же шаблон add
+class PostUpdate(UpdateView, LoginRequiredMixin, PermissionRequiredMixin):  # Джейнерик для редактирования объекта, используем тот же шаблон add
     template_name = 'add.html'
     form_class = PostForm
+    permission_required = ('news.add_post', 'news.delete_post', 'news.change_post')
 
     # get_object используем вместо queryset, чтобы получить информацию об объекте, который мы собираемся редактировать
     def get_object(self, **kwargs):
@@ -55,7 +66,14 @@ class PostUpdate(UpdateView):  # Джейнерик для редактиров�
         return Post.objects.get(pk=id)
 
 
-class PostDelete(DeleteView):  # Джейнерик для удаления объекта
+class PostDelete(DeleteView, PermissionRequiredMixin, LoginRequiredMixin):  # Джейнерик для удаления объекта
     template_name = 'delete.html'
     queryset = Post.objects.all()
     success_url = '/news/'
+    permission_required = ('news.add_post', 'news.delete_post', 'news.change_post')
+
+
+class About(TemplateView):
+    template_name = 'about.html'
+
+

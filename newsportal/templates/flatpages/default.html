@@ -23,9 +23,10 @@
                     <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/news"> Новости </a></li>
                     <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/news/search"> Поиск </a></li>
                     <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/news/add"> Предложить новость </a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/about"> О нас </a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/news/about"> О нас </a></li>
                     <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/contact"> Связь с нами </a></li>
                     <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/admin"> Админ </a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.path == '/about/' %} active {% endif %}" href="/accounts/logout/"> Выход </a></li>
                 </ul>
             </div>
         </div>
@@ -34,7 +35,7 @@
     <header class="py-5 bg-image-full" style="background-image: url('{% static 'dist/img/photo-1468657988500-aca2be09f4c6.jfif'%}')">
         <div class="text-center my-5">
 <!--                <img class="img-fluid rounded-circle mb-4" src="https://dummyimage.com/150x150/6c757d/dee2e6.jpg" alt="..." />-->
-            <h1 class="py-2 text-light"> {{ flatpage.title }} </h1>
+            <h1 class="py-2 text-light"> {% block header %} {% endblock header %} </h1>
         </div>
     </header>
     <!-- Content section-->

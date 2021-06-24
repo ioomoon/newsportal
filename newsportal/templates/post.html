@@ -5,9 +5,12 @@
 Новость
 {% endblock title %}
 
+{% block header %}
+Интересующий Вас контент:
+{% endblock header %}
+
 <!-- В контенте на странице мы выводим все товары -->
 {% block content %}
-<h1>Интересующий Вас контент:</h1>
 <h5>
 <strong> {{ post.title }} </strong>
 </h5>

@@ -27,6 +27,7 @@ class Author(models.Model):  # Модель, содержащая объекты
 
 class Category(models.Model):  # Модель, содержащая объекты категорий
     name = models.CharField(max_length=30, unique=True, verbose_name='Название категории')
+    subscribers = models.ManyToManyField(User, verbose_name='Подписчики')
 
     def __str__(self):
         return f'{self.name}'

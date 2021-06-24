@@ -25,8 +25,7 @@ SECRET_KEY = 'django-insecure-7qvn3%63+#2v7=ccc+@l6hbmydm!w$_tlpw10f0zz(4y#^8t(j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
 
@@ -39,10 +38,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.flatpages',
-    'fpages',   # регистрируем приложение fpages с файлом admin.py с настройками для админ панели
+    'fpages',  # регистрируем приложение fpages с файлом admin.py с настройками для админ панели
     'news',  # устанавливаем приложение news, в нем будут хранится все модели
     'django_filters',  # регистрируем приложение для доступа к фильтрам
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',  # ... include the providers you want to enable:
+    'allauth.socialaccount.providers.google',
+    'protect',
+    # Crispy - библиотека, которая предоставляет фильтр | crispy и тег {% crispy%} для управления рендеринга форм
+    'crispy_forms',
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -75,7 +83,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'newsportal.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -85,7 +92,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -105,7 +111,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -115,10 +120,9 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = False
+USE_L10N = True  # False
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -133,5 +137,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SITE_ID = 1
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static"   # добавляем путь к статическим файлам, чтобы подгрузить готовые CSS
+    BASE_DIR / "static"  # добавляем путь к статическим файлам, чтобы подгрузить готовые CSS
 ]
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/news/'
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+
+# Чтобы allauth распознал нашу форму как ту, что должна выполняться вместо формы по умолчанию:
+ACCOUNT_FORMS = {'signup': 'news.forms.BasicSignupForm'}
