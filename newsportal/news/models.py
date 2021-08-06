@@ -24,13 +24,21 @@ class Author(models.Model):  # Модель, содержащая объекты
     def __str__(self):
         return f'{self.user}'
 
+    class Meta:
+        verbose_name = 'Автор'
+        verbose_name_plural = 'Авторы'
+
 
 class Category(models.Model):  # Модель, содержащая объекты категорий
     name = models.CharField(max_length=30, unique=True, verbose_name='Название категории')
-    subscribers = models.ManyToManyField(User, verbose_name='Подписчики')
+    subscribers = models.ManyToManyField(User, blank=True, verbose_name='Подписчики')
 
     def __str__(self):
         return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class Post(models.Model):  # Модель, содержащая объекты всех постов
@@ -49,6 +57,10 @@ class Post(models.Model):  # Модель, содержащая объекты �
     title = models.CharField(max_length=50, verbose_name='Название')
     text = models.TextField(verbose_name='Текст')
     rating = models.IntegerField(default=0, verbose_name='Рейтинг')
+
+    class Meta:
+        verbose_name = 'Новость'
+        verbose_name_plural = 'Новости'
 
     def like(self): # Рейтинг поста
         self.rating += 1
@@ -76,12 +88,21 @@ class PostCategory(models.Model):
     def __str__(self):
         return f'{self.category}'
 
+    class Meta:
+        verbose_name = 'Категория новости'
+        verbose_name_plural = 'Категории новостей'
+
+
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.PROTECT, verbose_name='Пост')
     user = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Пользователь')
     text = models.CharField(max_length=250, verbose_name='Текст комментария')
     created_at = models.DateTimeField(auto_now_add=True)
     rating = models.IntegerField(default=0, verbose_name='Рейтинг')
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def like(self): # Рейтинг коммента
         self.rating += 1

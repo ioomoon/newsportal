@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
     'fpages',  # регистрируем приложение fpages с файлом admin.py с настройками для админ панели
-    'news',  # устанавливаем приложение news, в нем будут хранится все модели
+    'news.apps.NewsConfig',  # устанавливаем приложение news, в нем будут хранится все модели
+    # apps.NewsConfig - новая конфигурация приложения
     'django_filters',  # регистрируем приложение для доступа к фильтрам
     'allauth',
     'allauth.account',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'protect',
     # Crispy - библиотека, которая предоставляет фильтр | crispy и тег {% crispy%} для управления рендеринга форм
     'crispy_forms',
+
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -151,12 +153,29 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/news/'
 
+
+
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
+#Настройки почты:
+EMAIL_HOST = 'smtp.yandex.ru'  # адрес сервера Яндекс-почты
+EMAIL_PORT = 465  # порт smtp сервера всегда одинаковый
+EMAIL_HOST_USER = 'merrimorlavrushina@yandex.ru'  # имя пользователя до собаки
+EMAIL_HOST_PASSWORD = 'pdxxufzwpimbahud'  # пароль от почты
+EMAIL_USE_SSL = True
+
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 # Чтобы allauth распознал нашу форму как ту, что должна выполняться вместо формы по умолчанию:
 ACCOUNT_FORMS = {'signup': 'news.forms.BasicSignupForm'}
+
+ADMINS = [
+    ('Mary', 'lavrushina.maria@mail.ru'),
+    # список всех админов в формате ('имя', 'их почта')
+]

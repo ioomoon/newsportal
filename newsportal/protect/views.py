@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.shortcuts import redirect  # Пакет django.shortcuts собирает вспомогательные функции и классы,
 # которые «охватывают» несколько уровней MVC (render, redirect)
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 
 
 class ProtectView(LoginRequiredMixin, TemplateView):  # информация об авторизированном пользователе
@@ -14,7 +15,7 @@ class ProtectView(LoginRequiredMixin, TemplateView):  # информация о�
 
     # Переопределяем метод получения контекста. Сначала мы получили весь контекст из класса-родителя, а после чего
     # добавили новую контекстную переменную.
-    def get_context_data(self, **kwargs):  #
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_not_author'] = not self.request.user.groups.filter(name='authors').exists()  # добавляем новую
         # контекстную переменную is_not_author
@@ -27,6 +28,7 @@ class BaseRegisterView(CreateView):
     model = User
     form_class = BaseRegisterForm
     success_url = '/news/'
+
 
 
 @login_required

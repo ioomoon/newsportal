@@ -1,19 +1,41 @@
 {% extends 'flatpages/default.html' %}
 {% load censor %}  <!-- Подгружаем фильтры -->
 
-
 {% block title %}
-Новости
+{{ category.name }}
 {% endblock title %}
 
 {% block header %}
-Новости
+{{ category.name }}
 {% endblock header %}
 
+<!-- В контенте на странице мы выводим все товары -->
 {% block content %}
+<div align="center">
+    <h3>
+Хотите подписаться на эту категорию?
+</h3>
+<br>
+</div>
 
-<hr>
-    {% if posts %}
+<div align="center">
+{% if user.is_authenticated %}
+    {% if not is_subscriber %}
+        <form action="{% url 'subscribe_category' category.pk %}" method="POST">
+            {% csrf_token %}
+            <p><input class="btn btn-secondary btn-lg" type="submit" value="Подписаться"></p>
+        </form>
+    {% endif %}
+    {% if is_subscriber %}
+        <form action="{% url 'subscribe_category' category.pk %}" method="POST">
+            {% csrf_token %}
+            <p><h4> Вы подписаны </h4><input class="btn btn-secondary btn-lg" type="submit" value="Отписаться"></p>
+        </form>
+    {% endif %}
+{% endif %}
+</div>
+
+{% if posts_in_category %}
         <table width="150%" align="right">
         <style>
         table {
@@ -37,7 +59,7 @@
                     <b> Категория </b>
                 </td>
             </tr>
-            {% for post in posts %}
+            {% for post in posts_in_category %}
             <tr>
                 <td>
                     <a href="{% url 'post_detail' post.id %}">{{ post.title|title }} </a>
@@ -68,30 +90,5 @@
             </tr>
             {% endfor %}
         </table>
-    <hr>
-        <!-- Проверяем что поддерживается постраничный вывод -->
-        {% if is_paginated %}
-            <!-- Если доступна предыдущая страница, то даём ссылку на неё и самую первую страницу -->
-            {% if page_obj.has_previous %}
-                <a href="?page=1">Первая</a>
-                <a href="?page={{ page_obj.previous_page_number }}"><<<</a>
-            {% endif %}
-
-            <!-- Показываем только текущую страницу и ближайшие к ней, чтобы список не тянулся и не захламлял страницу -->
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <a>{{ num }}</a>
-                {% elif num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %}
-                    <a href="?page={{ num }}">{{ num }}</a>
-                {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">>>></a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
-            {% endif %}
-
-        {% endif %}
-    {% endif %}
-    <hr>
+{% endif %}
 {% endblock content %}

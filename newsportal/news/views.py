@@ -1,10 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View  # класс простого представления
 from django.views.generic import ListView  # класс, который позволяет в представлении выводить список объектов из БД
 from django.views.generic import DetailView  # класс, который позволяет вывести детали объекта на отдельной странице
 '''Импортируем классы, повзволяющие добавлять, удалять и обновлять объекты'''
 from django.views.generic import UpdateView, CreateView, DeleteView, TemplateView
-from .models import Post
+from .models import Post, Category
 from .filters import PostFilter  # импортируем фильтр
 from .forms import PostForm
 '''Импортируем миксин, который проверяет аутентификацию и допускает на страницу только зарегистрированных пользователей.
@@ -15,7 +15,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 <app>.<action>_<model>.'''
 from django.contrib.auth.mixins import PermissionRequiredMixin
 '''Импортируем встроенный модуль, позволяющий отправлять электронные письма'''
-from django.core.mail import send_mail
+from django.core.mail import *
 
 class PostList(ListView):
     model = Post  # указываем модель, объекты которой мы будем выводить
@@ -27,7 +27,7 @@ class PostList(ListView):
     paginate_by = 2  # постраничный вывод в х элементов
 
 
-class PostDetail(DetailView):  # редставление, в котором будут детали конкретного отдельного товара
+class PostDetail(DetailView):  # редставление, в котором будут детали конкретного отдельного поста
     model = Post
     template_name = 'post.html'
     context_object_name = 'post'
@@ -77,3 +77,36 @@ class About(TemplateView):
     template_name = 'about.html'
 
 
+class CategoryDetail(DetailView):  # представление, в котором будут детали категории
+    model = Category
+    template_name = 'category_detail.html'
+    context_object_name = 'category'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CategoryDetail, self).get_context_data(**kwargs)
+        context['is_subscriber'] = Category.objects.get(
+            pk=self.kwargs.get('pk')).subscribers.filter(username=self.request.user).exists()
+        context['posts_in_category'] = Post.objects.filter(category__name=Category.objects.get(pk=self.kwargs.get('pk')))
+        return context
+
+
+class SubscribeCategory(UpdateView):   # представление для редактирования объекта category и добавление подписчиков
+    model = Category
+    context_object_name = 'subscribe_category'
+
+    def post(self, request, *args, **kwargs):
+        category = Category.objects.get(pk=self.kwargs.get('pk'))
+        email = request.user.email
+        if not Category.objects.get(pk=self.kwargs.get('pk')).subscribers.filter(username=self.request.user).exists():
+            Category.objects.get(pk=self.kwargs.get('pk')).subscribers.add(self.request.user)
+            send_mail(
+                subject=f'{category.name}',
+                message=f'Категория на которую вы подписаны: {category.name}.  ',
+                from_email='merrimorlavrushina@yandex.ru',
+                # recipient_list=['lavrushina.maria@mail.ru'],
+                recipient_list=[email],
+            )
+        else:
+            Category.objects.get(pk=self.kwargs.get('pk')).subscribers.remove(self.request.user)
+
+        return redirect(request.META.get('HTTP_REFERER'))
