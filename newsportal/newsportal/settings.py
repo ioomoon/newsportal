@@ -165,7 +165,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 EMAIL_HOST = 'smtp.yandex.ru'  # адрес сервера Яндекс-почты
 EMAIL_PORT = 465  # порт smtp сервера всегда одинаковый
 EMAIL_HOST_USER = 'merrimorlavrushina'  # имя пользователя до собаки
-EMAIL_HOST_PASSWORD = 'bhsbqctstbziulvq'  # пароль от почты
+EMAIL_HOST_PASSWORD = ''  # пароль от почты
 EMAIL_USE_SSL = True
 
 
