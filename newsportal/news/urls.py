@@ -1,8 +1,8 @@
 from django.urls import path  # path — означает путь
-from .views import PostList, PostDetail, PostSearch, PostAdd, PostUpdate, PostDelete, About, CategoryDetail, SubscribeCategory  # импортируем представления
+from .views import PostList, PostDetail, PostSearch, PostAdd, PostUpdate, PostDelete, About, CategoryDetail, SubscribeCategory # импортируем представления
 
 urlpatterns = [
-    path('', PostList.as_view()),  # т.к. сам по себе это класс, нам надо представить этот класс в виде view
+    path('', PostList.as_view(), name='main'),  # т.к. сам по себе это класс, нам надо представить этот класс в виде view
     path('<int:pk>', PostDetail.as_view(), name='post_detail'),  # pk — это первичный ключ товара,
     # который будет выводиться у нас в шаблон
     # name - имая, по которому можно обращаться в шаблоне
@@ -12,5 +12,6 @@ urlpatterns = [
     path('delete/<int:pk>', PostDelete.as_view(), name='post_delete'),
     path('about/', About.as_view(), name='about'),
     path('category/<int:pk>/', CategoryDetail.as_view(), name='category'),
-    path('category/<int:pk>/subscribe', SubscribeCategory.as_view(), name='subscribe_category')
+    path('category/<int:pk>/subscribe', SubscribeCategory.as_view(), name='subscribe_category'),
+    # path('test/', IndexView.as_view()),
 ]

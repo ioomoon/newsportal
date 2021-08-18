@@ -16,6 +16,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 '''Импортируем встроенный модуль, позволяющий отправлять электронные письма'''
 from django.core.mail import *
+from .tasks import *
+
 
 class PostList(ListView):
     model = Post  # указываем модель, объекты которой мы будем выводить
@@ -53,6 +55,23 @@ class PostAdd(CreateView, LoginRequiredMixin, PermissionRequiredMixin):  # Дж�
     form_class = PostForm
     # Форма разрешений: <app>.<action>_<model>.
     permission_required = ('news.add_post', 'news.delete_post', 'news.change_post')
+
+    def post(self, request, *args, **kwargs):
+        '''Отправляет письмо подписчикам после создания нового поста'''
+        form = PostForm(request.POST)
+        post = form.save()
+        post_categories = post.category.all()
+        list_of_users = []
+        for category in post_categories:
+            for i in range(len(Category.objects.get(name=category).subscribers.all())):
+                list_of_users.append(Category.objects.get(name=category).subscribers.all()[i].email)
+        send_mail(
+            subject='Новый пост на портале newsportal!',
+            message=f'Спешите прочитать самые свежие новости в вашей любимой категории. Только что опубликовали еще одну!',
+            from_email='merrimorlavrushina@yandex.ru',
+            recipient_list=list_of_users,
+        )
+        return redirect('/news')
 
 
 class PostUpdate(UpdateView, LoginRequiredMixin, PermissionRequiredMixin):  # Джейнерик для редактирования объекта, используем тот же шаблон add
@@ -110,3 +129,10 @@ class SubscribeCategory(UpdateView):   # представление для ре�
             Category.objects.get(pk=self.kwargs.get('pk')).subscribers.remove(self.request.user)
 
         return redirect(request.META.get('HTTP_REFERER'))
+
+
+# class IndexView(View):
+# #     def get(self, request):
+# #         hello.delay()
+# #         email_once_a_week.delay()
+# #         return HttpResponse('Hello!')

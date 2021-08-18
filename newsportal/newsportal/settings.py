@@ -164,8 +164,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 #Настройки почты:
 EMAIL_HOST = 'smtp.yandex.ru'  # адрес сервера Яндекс-почты
 EMAIL_PORT = 465  # порт smtp сервера всегда одинаковый
-EMAIL_HOST_USER = 'merrimorlavrushina@yandex.ru'  # имя пользователя до собаки
-EMAIL_HOST_PASSWORD = 'pdxxufzwpimbahud'  # пароль от почты
+EMAIL_HOST_USER = 'merrimorlavrushina'  # имя пользователя до собаки
+EMAIL_HOST_PASSWORD = 'bhsbqctstbziulvq'  # пароль от почты
 EMAIL_USE_SSL = True
 
 
@@ -179,3 +179,12 @@ ADMINS = [
     ('Mary', 'lavrushina.maria@mail.ru'),
     # список всех админов в формате ('имя', 'их почта')
 ]
+
+
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+
