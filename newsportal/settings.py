@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,6 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-7qvn3%63+#2v7=ccc+@l6hbmydm!w$_tlpw10f0zz(4y#^8t(j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# Если DEBUG = True, Django отправляет все сообщения уровня INFO и выше в консоль.
+# Все сообщения уровней ERROR и CRITICAL отправляет разработчику через веб-интерфейс.
+# При DEBUG = False, сообщения уровня ERROR и CRITICAL отправляются в AdminEmailHandler
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1']
@@ -39,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
     'fpages',  # регистрируем приложение fpages с файлом admin.py с настройками для админ панели
-    'news',  # устанавливаем приложение news, в нем будут хранится все модели
+    'news.apps.NewsConfig',  # устанавливаем приложение news, в нем будут хранится все модели
+    # apps.NewsConfig - новая конфигурация приложения
     'django_filters',  # регистрируем приложение для доступа к фильтрам
     'allauth',
     'allauth.account',
@@ -48,6 +53,7 @@ INSTALLED_APPS = [
     'protect',
     # Crispy - библиотека, которая предоставляет фильтр | crispy и тег {% crispy%} для управления рендеринга форм
     'crispy_forms',
+
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -88,8 +94,14 @@ WSGI_APPLICATION = 'newsportal.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': '5254',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -151,12 +163,207 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/news/'
 
+"""Настройка аккаунта"""
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
+"""Настройки почты"""
+EMAIL_HOST = 'smtp.yandex.ru'  # адрес сервера Яндекс-почты
+EMAIL_PORT = 465  # порт smtp сервера всегда одинаковый
+EMAIL_HOST_USER = 'merrimorlavrushina'  # имя пользователя до собаки
+EMAIL_HOST_PASSWORD = 'bhsbqctstbziulvq'  # пароль от почты
+EMAIL_USE_SSL = True
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 # Чтобы allauth распознал нашу форму как ту, что должна выполняться вместо формы по умолчанию:
 ACCOUNT_FORMS = {'signup': 'news.forms.BasicSignupForm'}
+
+ADMINS = [
+    ('Mary', 'lavrushina.maria@mail.ru'),
+    # список всех админов в формате ('имя', 'их почта')
+]
+
+"""Настройки Celery и Redis"""
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+#
+# """Кэширование"""
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'cache_files'),  # Указываем, куда будем сохранять кэшируемые файлы
+        # Папку создаем самостоятельно
+    }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'loggers': {
+        'django': {
+            'handlers': ['news.info', 'news.console'],
+            'level': 'DEBUG',
+        },
+        'django.request': {
+            'handlers': ['news.error', 'news.info'],
+            'level': 'DEBUG',
+        },
+        'django.server': {
+            'handlers': ['news.error', 'news.info'],
+            'level': 'DEBUG',
+        },
+        'django.template': {
+            'handlers': ['news.error', 'news.info'],
+            'level': 'DEBUG',
+        },
+        'django.db_backends': {
+            'handlers': ['news.error', 'news.info'],
+            'level': 'DEBUG',
+        },
+        'django.security': {
+            'handlers': ['news.security'],
+            'level': 'DEBUG',
+        },
+
+    },
+    'handlers': {
+        'news.info': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'general.log',
+            'formatter': 'DEBUG',
+            'filters': ['require_debug_false'],
+        },
+        'news.error': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'error.log',
+            'formatter': 'ERROR',
+        },
+        'news.console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'filters': ['require_debug_true'],
+            'formatter': 'DEBUG',
+        },
+        'news.security': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filters': [],
+            'filename': 'security.log',
+            'formatter': 'DEBUG',
+        },
+        'news.mail': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_false'],
+            'formatter': 'WARNING',
+        },
+    },
+    'formatters': {
+        'DEBUG': {
+            'format': '{asctime} {levelname} {message}',
+            'style': '{',
+        },
+        'WARNING': {
+            'format': '{asctime} {levelname} {message} {pathname}',
+            'style': '{',
+        },
+        'ERROR': {
+            'format': '{asctime} {levelname} {message} {pathname} {exc_info}',
+            'style': '{',
+        },
+        'SECURITY': {
+            'format': '{asctime} {levelname} {message} {module}',
+            'style': '{',
+        }
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+}
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'style': '{',
+#     'formatters': {
+#         'simple': {
+#             'format': '{levelname} {message}'
+#         },
+#     },
+#     'filters': {
+#         'require_debug_true': {
+#             '()': 'django.utils.log.RequireDebugTrue',
+#         },
+#    },
+#     'handlers': {
+#         'console': {
+#             'level': 'INFO',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'simple'
+#         },
+#         'file': {
+#             'level': 'ERROR',
+#             'class': 'logging.FileHandler',
+#             'filename': '/home/alx/django/debug.log',
+#             'formatter': 'simple'
+#         }
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'propagate': True,
+#         },
+#         'django.request': {
+#             'handlers': ['file'],
+#             'level': 'ERROR',
+#             'propagate': False,
+#         }
+#     }
+# }
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,  # контролирует работу существующей (стандартной) схемы логирования Django
+#     'style': '{',
+#     'formatters': {
+#         'simple': {
+#             'format': '{levelname} {message}'
+#         },
+#         'warning': {
+#             'format': '{levelname} {message} {pathname}'
+#         },
+#         'error_critical': {
+#             'format': '{levelname} {message} {pathname} {exc_info}'
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'simple'
+#         },
+#         'file': {
+#             'level': 'INFO',
+#             'class': 'logging.FileHandler',
+#             'formatter': 'file',
+#             'filename': 'general.log'
+#         }
+#     },
+# }

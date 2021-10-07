@@ -2,6 +2,9 @@ from django.forms import ModelForm
 from .models import Post
 from allauth.account.forms import SignupForm
 from django.contrib.auth.models import Group
+# Для валидатора:
+import re
+from django.core.exceptions import ValidationError
 
 
 # Создаём модельную форму
@@ -10,6 +13,13 @@ class PostForm(ModelForm):
     class Meta:
         model = Post
         fields = ['author', 'kind', 'category', 'title', 'text']
+
+    # Кастомный валидатор, проверяющий, что название статьи не начинается с цифры
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        if re.match(r'\d', title):
+            raise ValidationError('Название не может начинаться с цифры.')
+        return title
 
 
 # Кастомизируем форму регистрации SignupForm, которую предоставляет пакет allauth

@@ -1,6 +1,8 @@
 #  Этот файл хранит все модели проекта.
 from django.db import models
 from django.contrib.auth.models import User  #  Модель User
+"""Импортируем кэш"""
+from django.core.cache import cache
 
 
 class Author(models.Model):  # Модель, содержащая объекты всех авторов
@@ -24,13 +26,21 @@ class Author(models.Model):  # Модель, содержащая объекты
     def __str__(self):
         return f'{self.user}'
 
+    class Meta:
+        verbose_name = 'Автор'
+        verbose_name_plural = 'Авторы'
+
 
 class Category(models.Model):  # Модель, содержащая объекты категорий
     name = models.CharField(max_length=30, unique=True, verbose_name='Название категории')
-    subscribers = models.ManyToManyField(User, verbose_name='Подписчики')
+    subscribers = models.ManyToManyField(User, blank=True, verbose_name='Подписчики')
 
     def __str__(self):
         return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class Post(models.Model):  # Модель, содержащая объекты всех постов
@@ -50,6 +60,10 @@ class Post(models.Model):  # Модель, содержащая объекты �
     text = models.TextField(verbose_name='Текст')
     rating = models.IntegerField(default=0, verbose_name='Рейтинг')
 
+    class Meta:
+        verbose_name = 'Новость'
+        verbose_name_plural = 'Новости'
+
     def like(self): # Рейтинг поста
         self.rating += 1
         self.save()
@@ -68,13 +82,22 @@ class Post(models.Model):  # Модель, содержащая объекты �
     def get_absolute_url(self):  # добавим абсолютный путь, чтобы после создания нас перебрасывало на главную страницу
         return f'/news/{self.id}'
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs) # вызываем метод родителя, чтобы объект сохранился
+        cache.delete(f'post-{self.pk}')  # удаляем его из кэша, чтобы сбросить его
+
 
 class PostCategory(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.PROTECT, verbose_name='Пост')
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name='Категория')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, verbose_name='Пост')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name='Категория')
 
     def __str__(self):
         return f'{self.category}'
+
+    class Meta:
+        verbose_name = 'Категория новости'
+        verbose_name_plural = 'Категории новостей'
+
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.PROTECT, verbose_name='Пост')
@@ -82,6 +105,10 @@ class Comment(models.Model):
     text = models.CharField(max_length=250, verbose_name='Текст комментария')
     created_at = models.DateTimeField(auto_now_add=True)
     rating = models.IntegerField(default=0, verbose_name='Рейтинг')
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def like(self): # Рейтинг коммента
         self.rating += 1

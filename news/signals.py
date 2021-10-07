@@ -1,38 +1,49 @@
 '''Импортируем модули, позволяющие отрабатывать сигналы или "события", такие как отправка post запроса'''
-from django.db.models.signals import post_save  # сигнал после post запроса
-from django.dispatch import receiver  # декоратор, объявляющий функцию приемника сигнала
-from .models import Post, Category
-from django.template.loader import render_to_string  # # импортируем функцию, которая срендерит наш html в текст
-from django.core.mail import EmailMultiAlternatives, send_mail
+from django.db.models.signals import post_save, post_delete, \
+    m2m_changed  # отправляется сигнал после вызова метода save() модели
+from django.dispatch import receiver  # декоратор, объявляющий функцию получателя сигнала, функция принимает аргумент
+# sender, а также аргументы (**kwargs) в формате словаря; все обработчики сигналов должны принимать подобные аргументы
+
+from .models import Post, Category, PostCategory  # импортируем модели
+from django.core.mail import send_mail
 from django.shortcuts import redirect
+from django.core.mail import mail_admins
 
 
 # В декоратор передаётся первым аргументом сигнал, на который будет реагировать эта функция, и в отправителе - модель
 # Создаем функцию обработчик с параметрами под регистрацию сигнала
 # Арг: sender - модель, instance - фактически сохраняемый экз, created - бул, истинно, если была создана новая запись
-@receiver(post_save, sender=Post)
-def notify_new_post(sender, instance, created, **kwargs):
 
-    if created:  # если создан новый пост
-        # Наблюдаем категорию, которая была изменена
-        new_post_categories = instance.category.all()
-        list_of_subscribers = []
-        html_context = {'new_post': instance, 'new_post_id': instance.id, }
+@receiver(m2m_changed, sender=Post.category.through)
+def notify_new_post(sender, action, instance, **kwargs):
+    if action == 'post_add':  # если проходит команда post_add, то есть добавляется новость,то выполняются следующие действия:
+        subject = f'{instance.title} {instance.created_at.strftime("%d %m %Y")}'
+    else:  # если изменена:
+        subject = f'Изменено  {instance.title} {instance.created_at.strftime("%d %m %Y")}'
+    id_post = instance.pk
+    link = f'http://127.0.0.1:8000/{id_post}'
+    categories = instance.category.all()
+    emails = []
+    for category in categories:
+        subscribers = category.subscribers.all()
+        for sub in subscribers:
+            emails.append(sub.email)
 
-        for category in new_post_categories:
-            html_context['new_post_category'] = category
-            subs = category.subscribers.all()
-            for sub in subs:
-                list_of_subscribers.append(sub.email)
+    send_mail(
+        subject='"' + subject + '"',
+        message='В вашей любимой категории новая публикация:' + link + ' ' + instance.text,
+        from_email='merrimorlavrushina@yandex.ru',
+        recipient_list=emails
+    )
 
-            html_content = render_to_string('new_post_in_category.html', html_context)
 
-            msg = EmailMultiAlternatives(
-                subject=f'Новый пост в Вашей любимой категории {html_context["new_post_category"]}',
-                from_email='merrimorlavrushina@yandex.ru',
-                to=list_of_subscribers,
-            )
-            msg.attach_alternative(html_content, "text/html")
-            msg.send()
+@receiver(post_delete, sender=Post)
+def notify_post_del(sender, instance, **kwargs):
+    subject = f'Новость "{instance.title}" удалена'
 
-        return redirect('/')
+    send_mail(
+        subject=subject,
+        message=instance.text,
+        from_email='merrimorlavrushina@yandex.ru',
+        recipient_list=['lavrushina.maria@mail.ru']
+    )

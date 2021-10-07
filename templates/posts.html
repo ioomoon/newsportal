@@ -33,6 +33,9 @@
                 <td>
                     <b> Превью </b>
                 </td>
+                <td>
+                    <b> Категория </b>
+                </td>
             </tr>
             {% for post in posts %}
             <tr>
@@ -48,8 +51,8 @@
                     color: Black; /* Новый цвет текста */
                     }
                     </style>
-                    <a href="{% url 'post_update' post.id %}"><u>Редактировать</u></a> <!-- добавим ссылку на редактирование товара-->
-                    <a href="{% url 'post_delete' post.id %}"><u>Удалить</u></a> <!-- добавим ссылку на удаление товара-->
+                    <a href="{% url 'post_update' post.id %}"><u>Редактировать</u></a> <!-- добавим ссылку на редактирование-->
+                    <a href="{% url 'post_delete' post.id %}"><u>Удалить</u></a> <!-- добавим ссылку на удаление-->
                 </td>
                 <td>
                     {{ post.created_at|date:'M d Y' }}
@@ -57,8 +60,12 @@
                 <td>
                     {{post.text|censor|truncatewords:20}}
                 </td>
+                <td>
+                    {% for category in post.category.all %}
+                            <a href="{% url 'category' category.pk %}"> {{ category }} </a>
+                    {% endfor %}
+                </td>
             </tr>
-
             {% endfor %}
         </table>
     <hr>
